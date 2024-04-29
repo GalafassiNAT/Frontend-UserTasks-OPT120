@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front_opt120/screens/login_screen.dart';
+import 'package:front_opt120/screens/user_home_screen.dart';
 import 'package:front_opt120/utils/jwt_utils.dart';
 
 import 'admin_home_screen.dart';
@@ -22,7 +23,7 @@ class InitialScreen extends StatelessWidget {
               if (userProfile['name'] == 'ADMIN'){
                 return const AdminHomePage();
               }else {
-                return const LoginPage();
+                return const UserHomePage();
               }
             } else {
               return const LoginPage();

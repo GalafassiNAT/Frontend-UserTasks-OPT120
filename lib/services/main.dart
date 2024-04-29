@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:front_opt120/screens/initial_screen.dart';
 import 'package:front_opt120/screens/login_screen.dart';
+import 'package:front_opt120/screens/user_home_screen.dart';
 import '../screens/admin_home_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
           '/': (context) => const InitialScreen(),
           '/login': (context) => const LoginPage(),
           '/adminHome': (context) => const AdminHomePage(),
+          '/userHome': (context) => const UserHomePage(),
         },
     );
   }

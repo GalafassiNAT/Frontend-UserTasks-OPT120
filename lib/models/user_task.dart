@@ -18,7 +18,7 @@ class UserTask{
     return UserTask(
       userId: json['UserId'] ?? 0,
       taskId: json['TaskId'] ?? 0,
-      delivered: json['Delivered'] != null ? DateTime.parse(json['delivered']) : DateTime(0),
+      delivered: json['Delivered'] != null ? DateTime.parse(json['Delivered']) : DateTime(0),
       score: json['Score'] ?? 0.00,
       isDelivered: json['IsDelivered'] ?? false,
       isDeleted: json['IsDeleted'] ?? false

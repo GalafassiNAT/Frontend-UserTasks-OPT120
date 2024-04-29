@@ -3,11 +3,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:front_opt120/components/menu.dart';
 import 'package:front_opt120/models/user.dart';
 import 'package:front_opt120/models/user_task.dart';
 import 'package:front_opt120/utils/jwt_utils.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
+
 
 import '../models/task.dart';
 
@@ -70,26 +71,6 @@ Future<List<UserTask>> fetchUserTasksByUserId(String userIdO) async {
   }
 }
 
-Future<double> fetchScore(String taskId, String userId) async {
-  String? jwtToken = await getTokenSP();
-  print('Fetching score for task $taskId and user $userId');
-  print("${userTaskRoute!}user/$userId/task/$taskId");
-  final response = await http.get(
-      Uri.parse("${userTaskRoute!}user/$userId/task/$taskId"),
-      headers: {
-        'Authorization': 'Bearer $jwtToken',
-      }
-  );
-  if(response.statusCode == 200){
-    dynamic data = jsonDecode(response.body);
-    print('Data retrieved: $data');
-    double score = data['Score'];
-    print('Score retrieved: $score');
-    return score;
-  } else {
-    throw Exception("Failed to load score");
-  }
-}
 
 Future<User> fetchUser(String userId) async {
   String? jwtToken = await getTokenSP();
@@ -99,7 +80,7 @@ Future<User> fetchUser(String userId) async {
       Uri.parse("${userRoute!}$userId"),
       headers: {
         'Authorization': 'Bearer $jwtToken',
-     }
+      }
   );
   if(response.statusCode == 200){
     dynamic data = jsonDecode(response.body);
@@ -198,13 +179,6 @@ Future<bool> updateUser(BuildContext context, String userId, String name, String
   }
 }
 
-
-
-class ScoreHolder{
-  double score;
-  ScoreHolder(this.score);
-}
-
 Future<String> getProfileFromToken() async {
   String? jwtToken = await getTokenSP();
   var decodedToken = decodeJwtToken(jwtToken!);
@@ -213,17 +187,16 @@ Future<String> getProfileFromToken() async {
 }
 
 
-class UserInfoPage extends StatefulWidget {
+class UserProfilePage extends StatefulWidget {
   final User user;
-  const UserInfoPage({super.key, required this.user});
+  const UserProfilePage({super.key, required this.user});
 
   @override
-  State<UserInfoPage> createState() => _UserInfoPageState();
+  State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _UserInfoPageState extends State<UserInfoPage> {
+class _UserProfilePageState extends State<UserProfilePage> {
   Key key = UniqueKey();
-  ScoreHolder startScore = ScoreHolder(0.0);
 
   @override
   Widget build(BuildContext context) {
@@ -266,6 +239,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
 
         backgroundColor: Colors.deepPurple,
       ),
+      drawer: const Menu(),
       body: Padding(
         key: key,
         padding: const EdgeInsets.all(16.0),
@@ -301,110 +275,6 @@ class _UserInfoPageState extends State<UserInfoPage> {
                   return const CircularProgressIndicator();
                 }
             ),
-            const SizedBox(height: 8),
-            FutureBuilder<List<UserTask>>(
-              future: fetchUserTasksByUserId(widget.user.id.toString()),
-              builder: (BuildContext context,
-                  AsyncSnapshot<List<UserTask>> snapshot) {
-                if (snapshot.hasData) {
-                  return Expanded(
-                    child: ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: FutureBuilder<Task>(
-                            future: fetchTask(
-                                snapshot.data![index].taskId.toString()),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<Task> taskSnapshot) {
-                              if (taskSnapshot.hasData) {
-                                return Text(
-                                    'Tarefa: ${taskSnapshot.data!.title}');
-                              } else if (taskSnapshot.hasError) {
-                                return Text("Erro: ${taskSnapshot.error}");
-                              }
-                              return const CircularProgressIndicator();
-                            },
-                          ),
-                          subtitle: FutureBuilder<Task>(
-                            future: fetchTask(
-                                snapshot.data![index].taskId.toString()),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<Task> taskSnapshot) {
-                              if (taskSnapshot.hasData) {
-                                String formattedDate;
-                                formattedDate =
-                                    DateFormat('dd/MM/yyyy HH:mm:ss').format(
-                                        taskSnapshot.data!.deliveryDate);
-                                return Text(
-                                    'Data de validade: ${formattedDate}');
-                              } else if (taskSnapshot.hasError) {
-                                return Text("Erro: ${taskSnapshot.error}");
-                              }
-                              return const CircularProgressIndicator();
-                            },
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-
-                              FutureBuilder<double>(
-                                future: fetchScore(
-                                    snapshot.data![index].taskId.toString(),
-                                    snapshot.data![index].userId.toString()),
-                                builder: (BuildContext context,
-                                    AsyncSnapshot<double> scoreSnapshot) {
-                                  if (scoreSnapshot.hasData) {
-                                    startScore.score = scoreSnapshot.data!;
-                                    print('Score FUTURE: ${startScore.score}');
-                                    return Text('Nota: \n${startScore.score}',
-                                      style: TextStyle(fontSize: 15,
-                                          color: startScore.score >= 6 ? Colors
-                                              .green : Colors.red
-                                      ),
-                                    );
-                                  } else if (scoreSnapshot.hasError) {
-                                    return Text("Erro: ${scoreSnapshot.error}");
-                                  }
-                                  return const CircularProgressIndicator();
-                                },
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          EditScorePage(
-                                            initialScore: snapshot.data![index]
-                                                .score,
-                                            taskId: snapshot.data![index].taskId
-                                                .toString(),
-                                            userId: snapshot.data![index].userId
-                                                .toString(),
-                                          ),
-                                    ),
-                                  ).then((_) {
-                                    setState(() {});
-                                  });
-                                },
-                                icon: const Icon(
-                                    Icons.edit, color: Colors.blue),
-                                tooltip: 'Editar nota',
-
-                              )
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return Text("${snapshot.error}");
-                }
-                return const CircularProgressIndicator();
-              },
-            ),
           ],
         ),
       ),
@@ -431,18 +301,18 @@ class UpdateUserPage extends StatefulWidget {
 
 class _UpdateUserPageState extends State<UpdateUserPage> {
 
-late TextEditingController nameController;
-late TextEditingController emailController;
-late TextEditingController passwordController;
+  late TextEditingController nameController;
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
 
 
-@override
-void initState(){
-  super.initState();
-  nameController = TextEditingController(text: widget.user.name);
-  emailController = TextEditingController(text: widget.user.email);
-  passwordController = TextEditingController();
-}
+  @override
+  void initState(){
+    super.initState();
+    nameController = TextEditingController(text: widget.user.name);
+    emailController = TextEditingController(text: widget.user.email);
+    passwordController = TextEditingController();
+  }
 
   bool isPasswordVisible = true;
 
@@ -487,8 +357,8 @@ void initState(){
                   prefixIcon: const Icon(Icons.lock),
                   labelText: 'Senha',
                   suffixIcon: IconButton(
-                   icon:  Icon(
-                    isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    icon:  Icon(
+                      isPasswordVisible ? Icons.visibility : Icons.visibility_off,
 
                     ),
                     onPressed: () {
@@ -504,87 +374,12 @@ void initState(){
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: ElevatedButton(
                   onPressed: () {
-                      updateUser(
-                          context,
-                          widget.user.id.toString(),
-                          nameController.text,
-                          emailController.text,
-                          passwordController.text);
-                  },
-                  child: const Text('Atualizar'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-// Pagina de edição da nota.
-class EditScorePage extends StatefulWidget {
-  final double initialScore;
-  final String userId;
-  final String taskId;
-
-   EditScorePage({super.key,
-  required this.initialScore,
-    required this.taskId,
-  required this.userId});
-
-  @override
-  _EditScorePageState createState() => _EditScorePageState();
-}
-
-class _EditScorePageState extends State<EditScorePage> {
-  late double initialScore;
-  late TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    initialScore = widget.initialScore;
-    _controller = TextEditingController(text: initialScore.toString());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Editar Nota'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              TextFormField(
-                controller: _controller,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Nota',
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: ElevatedButton(
-                  onPressed: () async {
-                     try{
-                       bool success = await updateScore(
-                           context,
-                           widget.taskId,
-                           widget.userId,
-                            _controller.text
-                       );
-                       if(success){
-                         initialScore = double.parse(_controller.text);
-                       }
-                     } catch(e){
-                       print('Erro ao atualizar nota: $e');
-                     }
+                    updateUser(
+                        context,
+                        widget.user.id.toString(),
+                        nameController.text,
+                        emailController.text,
+                        passwordController.text);
                   },
                   child: const Text('Atualizar'),
                 ),

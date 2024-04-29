@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
             decoration: const BoxDecoration(color: Colors.deepPurple,
                 borderRadius: BorderRadius.all(Radius.circular(23))
             ),
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(13),
             child: Stack(
               children: [
                 CustomPaint(
@@ -172,13 +172,6 @@ class _LoginPageState extends State<LoginPage> {
                               style: TextStyle(
                                   fontSize: 50 ,
                                   color: _isSigningIn ? Colors.deepPurple : Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      offset: const Offset(2, 2),
-                                      blurRadius: 0.6,
-                                      color: _isSigningIn ? Colors.black : Colors.white,
-                                    )
-                                  ]
                               ),
                             ),
                             const SizedBox(height: 20),
