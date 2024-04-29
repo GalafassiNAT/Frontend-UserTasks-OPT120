@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import '../screens/home_screen.dart';
+import 'package:front_opt120/screens/initial_screen.dart';
+import 'package:front_opt120/screens/login_screen.dart';
+import '../screens/admin_home_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 Future main() async{
   await dotenv.load();
@@ -21,7 +24,12 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+       initialRoute: '/',
+        routes: {
+          '/': (context) => const InitialScreen(),
+          '/login': (context) => const LoginPage(),
+          '/adminHome': (context) => const AdminHomePage(),
+        },
     );
   }
 }

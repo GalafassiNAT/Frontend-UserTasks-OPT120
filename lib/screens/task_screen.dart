@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../components/menu.dart';
+import '../utils/jwt_utils.dart';
 
 final taskRoute = dotenv.env['TASK_ROUTE'];
 
 final titleController = TextEditingController();
 final descriptionController = TextEditingController();
 final deliveryDateController = TextEditingController();
-
 
 class TaskPage extends StatelessWidget {
   const TaskPage({super.key});
@@ -68,15 +68,14 @@ class TaskPage extends StatelessWidget {
     }
   }
 
-
-
-
   Future<void> postData(BuildContext context, String title, String description,
       DateTime deliveryDate) async {
+    String? jwtToken = await getTokenSP();
     final response = await http.post(
         Uri.parse(taskRoute!),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $jwtToken',
         },
         body: jsonEncode(<String, dynamic>{
           'title': title,
@@ -169,7 +168,8 @@ class TaskPage extends StatelessWidget {
                       style: TextStyle(color: Color.fromRGBO(198, 230, 232, 100)),
                     ),
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.calendar_today),
+                      icon: const Icon(Icons.calendar_today,
+                      color: Colors.white),
                       onPressed: (){
                         _selectDate(context);
                       },

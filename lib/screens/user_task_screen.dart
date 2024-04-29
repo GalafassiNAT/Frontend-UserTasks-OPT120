@@ -6,6 +6,7 @@ import 'package:front_opt120/models/task.dart';
 import 'package:front_opt120/models/user.dart';
 import 'package:http/http.dart' as http;
 import '../components/menu.dart';
+import '../utils/jwt_utils.dart';
 
 final taskGet = dotenv.env['TASK_ROUTE'];
 final userRoute = dotenv.env['USER_ROUTE'];
@@ -17,8 +18,6 @@ class UserTaskPage extends StatefulWidget{
   @override
   State<UserTaskPage> createState() => _UserTaskPageState();
 }
-
-
 
 class _UserTaskPageState extends State<UserTaskPage> {
 
@@ -56,7 +55,7 @@ class _UserTaskPageState extends State<UserTaskPage> {
   }
 
   Future<void> postData(int userId, int taskId) async{
-
+    String? jwtToken = await getTokenSP();
     print('FUNCTION!!! User: $userId Task: $taskId');
     print('Route: $userTaskRoute');
     print('Map: ${<String, int>{'userId': userId, 'taskId': taskId}}');
@@ -65,6 +64,7 @@ class _UserTaskPageState extends State<UserTaskPage> {
         Uri.parse(userTaskRoute!),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $jwtToken',
         },
         body: jsonEncode(<String, int>{
           'userId': userId,
@@ -88,7 +88,14 @@ class _UserTaskPageState extends State<UserTaskPage> {
 
 
   Future<List<Task>> fetchTasks() async {
-    final response = await http.get(Uri.parse(taskGet!));
+    String? jwtToken = await getTokenSP();
+    final response = await http.get(
+        Uri.parse(taskGet!),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $jwtToken',
+        }
+    );
     if(response.statusCode == 200){
       List<dynamic> data = jsonDecode(response.body);
       print('Data retrieved: $data');
@@ -101,7 +108,14 @@ class _UserTaskPageState extends State<UserTaskPage> {
   }
 
 Future<List<User>> fetchUsers() async {
-    final response = await http.get(Uri.parse(userRoute!));
+    String? jwtToken = await getTokenSP();
+    final response = await http.get(
+        Uri.parse(userRoute!),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $jwtToken',
+        }
+    );
     if(response.statusCode == 200){
       List<dynamic> data = jsonDecode(response.body);
       print('Data retrieved: $data');

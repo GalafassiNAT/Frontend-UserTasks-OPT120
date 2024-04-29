@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:front_opt120/models/user.dart';
 import 'package:front_opt120/models/user_task.dart';
+import 'package:front_opt120/utils/jwt_utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -14,6 +14,7 @@ import '../models/task.dart';
 final userTaskRoute = dotenv.env['USERTASK_ROUTE'];
 final taskRoute = dotenv.env['TASK_ROUTE'];
 final userRoute = dotenv.env['USER_ROUTE'];
+
 
 void showSuccessDialog(BuildContext context, String object) {
   showDialog(
@@ -35,6 +36,7 @@ void showSuccessDialog(BuildContext context, String object) {
             child: Text('Fechar'),
             onPressed: () {
               Navigator.of(context).pop();
+              Navigator.pop(context);
             },
           ),
         ],
@@ -44,9 +46,15 @@ void showSuccessDialog(BuildContext context, String object) {
 }
 
 Future<List<UserTask>> fetchUserTasksByUserId(String userIdO) async {
+  String? jwtToken = await getTokenSP();
   print('Fetching tasks for user $userIdO');
   print("${userTaskRoute!}user/$userIdO");
-  final response = await http.get(Uri.parse("${userTaskRoute!}user/$userIdO"));
+  final response = await http.get(
+      Uri.parse("${userTaskRoute!}user/$userIdO"),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+      }
+  );
   if(response.statusCode == 200){
     List<dynamic> data = jsonDecode(response.body);
     print('Data retrieved: $data');
@@ -63,9 +71,15 @@ Future<List<UserTask>> fetchUserTasksByUserId(String userIdO) async {
 }
 
 Future<double> fetchScore(String taskId, String userId) async {
+  String? jwtToken = await getTokenSP();
   print('Fetching score for task $taskId and user $userId');
   print("${userTaskRoute!}user/$userId/task/$taskId");
-  final response = await http.get(Uri.parse("${userTaskRoute!}user/$userId/task/$taskId"));
+  final response = await http.get(
+      Uri.parse("${userTaskRoute!}user/$userId/task/$taskId"),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+      }
+  );
   if(response.statusCode == 200){
     dynamic data = jsonDecode(response.body);
     print('Data retrieved: $data');
@@ -78,9 +92,15 @@ Future<double> fetchScore(String taskId, String userId) async {
 }
 
 Future<User> fetchUser(String userId) async {
+  String? jwtToken = await getTokenSP();
   print('Fetching user $userId');
   print("${userRoute!}$userId");
-  final response = await http.get(Uri.parse("${userRoute!}$userId"));
+  final response = await http.get(
+      Uri.parse("${userRoute!}$userId"),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+     }
+  );
   if(response.statusCode == 200){
     dynamic data = jsonDecode(response.body);
     print('Data retrieved: $data');
@@ -95,10 +115,16 @@ Future<User> fetchUser(String userId) async {
 
 
 Future<Task> fetchTask(String taskId) async {
+  String? jwtToken = await getTokenSP();
   print('Fetching task $taskId');
   print("${taskRoute!}$taskId");
 
-  final response = await http.get(Uri.parse("${taskRoute!}$taskId"));
+  final response = await http.get(
+      Uri.parse("${taskRoute!}$taskId"),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+      }
+  );
   if(response.statusCode == 200){
     print('Response body: ${response.body}');
     dynamic data = jsonDecode(response.body);
@@ -113,6 +139,7 @@ Future<Task> fetchTask(String taskId) async {
 
 Future<bool> updateScore(BuildContext context, String taskId,
     String userId, String score) async {
+  String? jwtToken = await getTokenSP();
   print('Updating score for task $taskId and user $userId');
   print('Score: $score');
   print("${userTaskRoute!}score/$userId/$taskId");
@@ -120,6 +147,7 @@ Future<bool> updateScore(BuildContext context, String taskId,
     Uri.parse("${userTaskRoute!}score/$userId/$taskId"),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer $jwtToken',
     },
     body: jsonEncode(<String, String>{
       'score': score,
@@ -136,7 +164,7 @@ Future<bool> updateScore(BuildContext context, String taskId,
 }
 
 Future<bool> updateUser(BuildContext context, String userId, String name, String email, String password) async {
-
+  String? jwtToken = await getTokenSP();
   print('Updating user $userId');
   print('Name: $name');
   print('Email: $email');
@@ -156,6 +184,7 @@ Future<bool> updateUser(BuildContext context, String userId, String name, String
     Uri.parse("${userRoute!}$userId"),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer $jwtToken',
     },
     body: jsonEncode(body),
   );
@@ -192,6 +221,9 @@ class _UserInfoPageState extends State<UserInfoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
         title: FutureBuilder<User>(
           future: fetchUser(widget.user.id.toString()),
           builder: (BuildContext context, AsyncSnapshot<User> snapshot) {
@@ -383,7 +415,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
 // Pagina de atualização do user.
 class UpdateUserPage extends StatefulWidget {
   final User user;
-  const UpdateUserPage({Key? key, required this.user}) : super(key: key);
+  const UpdateUserPage({super.key, required this.user});
 
   @override
   _UpdateUserPageState createState() => _UpdateUserPageState();
@@ -414,6 +446,9 @@ void initState(){
           style: TextStyle(
             color: Colors.white,
           ),
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.white,
         ),
         backgroundColor: Colors.deepPurple,
       ),
